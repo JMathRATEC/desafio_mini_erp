@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('frete', 10, 2);
             $table->decimal('total', 10, 2);
             $table->string('status')->default('novo');
+            $table->string('email');
             $table->string('cep', 9);
             $table->string('logradouro');
             $table->string('bairro');

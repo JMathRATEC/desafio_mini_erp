@@ -1,61 +1,155 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mini ERP - Desafio Técnico
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gestão de pedidos, produtos, cupons e estoque, desenvolvido em Laravel 12.
 
-## About Laravel
+## Instruções do Desafio
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Crie um banco de dados com 4 tabelas: **pedidos**, **produtos**, **cupons**, **estoque**.
+- Crie uma tela simples para cadastro de produtos (Nome, Preço, Variações e Estoque). O cadastro gera associações entre produtos e estoques. Permitir cadastro de variações e controle de estoque é um bônus.
+- Na mesma tela, permita atualizar dados do produto e do estoque.
+- Com o produto salvo, adicione na mesma tela um botão de Comprar. Ao clicar, gerencie um carrinho em sessão, controlando o estoque e valores do pedido.  
+  - Subtotal entre R$52,00 e R$166,59: frete R$15,00  
+  - Subtotal maior que R$200,00: frete grátis  
+  - Outros valores: frete R$20,00
+- Adicione verificação de CEP usando https://viacep.com.br/
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Pontos adicionais
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Crie cupons gerenciáveis por tela ou migração. Os cupons têm validade e regras de valor mínimo baseadas no subtotal do carrinho.
+- Adicione envio de e-mail ao finalizar o pedido, com o endereço preenchido pelo cliente.
+- Crie um webhook que recebe o ID e status do pedido. Se status for cancelado, remova o pedido. Se for outro, atualize o status.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Como rodar o projeto
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Instale as dependências
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+npm install
+```
 
-## Laravel Sponsors
+### 2. Configure o ambiente
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Crie um arquivo `.env` na raiz do projeto com as configurações do seu banco de dados e e-mail. Exemplo para Mailtrap:
 
-### Premium Partners
+```dotenv
+APP_NAME=MiniERP
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/para/database.sqlite
 
-## Contributing
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=seu_usuario_mailtrap
+MAIL_PASSWORD=sua_senha_mailtrap
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="contato@minierp.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Gere a chave da aplicação:
 
-## Code of Conduct
+```bash
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 3. Crie o banco de dados
 
-## Security Vulnerabilities
+Você pode rodar as migrations normalmente:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate --seed
+```
 
-## License
+Ou, se quiser criar as tabelas manualmente, use o SQL abaixo:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```sql
+CREATE TABLE produtos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    created_at DATETIME,
+    updated_at DATETIME
+);
+
+CREATE TABLE estoque (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    produto_id INTEGER NOT NULL,
+    variacao VARCHAR(255),
+    quantidade INTEGER DEFAULT 0,
+    created_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE cupons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo VARCHAR(255) UNIQUE NOT NULL,
+    desconto_valor DECIMAL(10,2),
+    desconto_percentual DECIMAL(5,2),
+    valor_minimo DECIMAL(10,2) DEFAULT 0,
+    data_validade DATE NOT NULL,
+    created_at DATETIME,
+    updated_at DATETIME
+);
+
+CREATE TABLE pedidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    itens JSON NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    frete DECIMAL(10,2) NOT NULL,
+    total DECIMAL(10,2) NOT NULL,
+    status VARCHAR(255) DEFAULT 'novo',
+    email VARCHAR(255) NOT NULL,
+    cep VARCHAR(9) NOT NULL,
+    logradouro VARCHAR(255) NOT NULL,
+    bairro VARCHAR(255) NOT NULL,
+    cidade VARCHAR(255) NOT NULL,
+    estado VARCHAR(255) NOT NULL,
+    created_at DATETIME,
+    updated_at DATETIME
+);
+```
+
+### 4. Rode o projeto
+
+```bash
+php artisan serve
+```
+
+Acesse em [http://localhost:8000](http://localhost:8000)
+
+---
+
+## Funcionalidades
+
+- Cadastro, edição e variação de produtos e estoque.
+- Carrinho de compras com controle de estoque e cálculo automático de frete.
+- Aplicação e remoção de cupons de desconto.
+- Consulta de endereço por CEP (ViaCEP).
+- Envio de e-mail ao finalizar ou cancelar pedido.
+- Webhook para atualização/cancelamento de pedidos.
+
+---
+
+## Exemplo de Seeder de Cupons
+
+Veja o arquivo `database/seeders/CupomSeeder.php` para exemplos de cupons gerados automaticamente. Exemplo de cupom:
+
+```php
+Cupom::create([
+    'codigo' => 'DESCONTO10',
+    'desconto_valor' => 10.00,
+    'desconto_percentual' => null,
+    'valor_minimo' => 50.00,
+    'data_validade' => '2024-12-31',
+]);
+```
+
